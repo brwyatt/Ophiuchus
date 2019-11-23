@@ -15,6 +15,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     package_data={},
+    python_requires='~=3.6',
     include_package_data=False,
     entry_points={},
     install_requires=[
