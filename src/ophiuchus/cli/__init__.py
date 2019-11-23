@@ -4,21 +4,17 @@ from argparse import ArgumentParser
 from typing import Dict
 from typing import List
 
-import pkg_resources
 from ophiuchus.cli.subcommands import Subcommand
+from ophiuchus.utils import load_entry_points
 
 
 log = logging.getLogger(__name__)
 
 
 def load_subcommands() -> Dict[str, Subcommand]:
-    subcommands = {}
-    for entry_point in pkg_resources.iter_entry_points(
-        "ophiuchus_subcommands",
-    ):
-        subcommands[entry_point.name] = entry_point.load()
-
-    return subcommands
+    return load_entry_points(
+        "ophiuchus_subcommands", type_constraint=Subcommand,
+    )
 
 
 def get_arg_parser() -> ArgumentParser:
