@@ -24,6 +24,10 @@ def load_subcommands() -> Dict[str, Subcommand]:
 def get_arg_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
+    parser.description = (
+        "Command-line interface to interact with Ophiuchus-based websites."
+    )
+
     # Display help by default
     parser.set_defaults(func=lambda **x: parser.print_help())
     parser.set_defaults(subcommand="help")
