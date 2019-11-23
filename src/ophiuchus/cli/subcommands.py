@@ -1,4 +1,5 @@
 import logging
+from argparse import ArgumentParser
 
 
 # Parent class for subcommands.
@@ -6,7 +7,7 @@ class Subcommand:
     help = None
     description = None
 
-    def __init__(self, parser):
+    def __init__(self, parser: ArgumentParser):
         self.log = logging.getLogger(
             "{}.{}".format(self.__module__, self.__class__.__name__),
         )
