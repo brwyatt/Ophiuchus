@@ -5,15 +5,15 @@ Library to create, build, and deploy serverless website stacks on AWS
 
 ### Setup
 
-1. Create Python Virtual Environment:  
+1. Create Python Virtual Environment:
    `python3 -m venv env`
-2. Activate Python venv:  
+2. Activate Python venv:
    `source env/bin/activate`
-3. Install dev tools:  
+3. Install dev tools:
    `pip3 install -r requirements-dev.txt`
-4. Install pre-commit hooks:  
+4. Install pre-commit hooks:
    `pre-commit install`
-5. Install package for development:  
+5. Install package for development:
    `pip3 install -e .`
 
 ### Development
