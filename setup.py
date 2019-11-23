@@ -16,6 +16,12 @@ setup(
     package_data={},
     python_requires="~=3.6",
     include_package_data=False,
-    entry_points={},
+    entry_points={
+        "console_scripts": ["ophiuchus = ophiuchus.cli:main"],
+        "ophiuchus_subcommands": [
+            "run = ophiuchus.cli.run:Run",
+            "build = ophiuchus.cli.build:Build",
+        ],
+    },
     install_requires=["boto3==1.10.26"],
 )
