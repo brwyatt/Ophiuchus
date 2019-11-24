@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 import logging
 from argparse import ArgumentParser
 
@@ -14,15 +15,44 @@ app_runners = {}
 
 
 def aiohttp_wrapper(handler: Handler):
-    def wrapper(request):
+    async def wrapper(request):
         log.info(
             f"Received {request.method} request for {request.path} from "
-            f"{request._transport_peername[0]}:{request._transport_peername[1]}",
+            f"{request._transport_peername[0]}:"
+            f"{request._transport_peername[1]}",
         )
-        event = {}
-        context = {}
+        log.debug(f"Request details: {request.__dict__}")
 
-        response = getattr(handler, request.method)(event, context)
+        event = {
+            "path": request.path,
+            "pathParameters": {
+                key: value for key, value in request.match_info.items()
+            },
+            "queryStringParameters": {
+                key: value for key, value in request.query.items()
+            },
+            "headers": {key: value for key, value in request.headers.items()},
+            "requestContext": {
+                "identity": {
+                    "sourceIp": request.remote,
+                    "userAgent": request.headers.get("user-agent", "null"),
+                },
+            },
+            "resource": request.path,  # close enough
+            "body": str(await request.read(), "utf-8"),
+        }
+        context = None
+
+        log.debug(f"Constructed synthetic event: {event}")
+
+        raw_response = getattr(handler, request.method)(event, context)
+
+        if raw_response is None:
+            raw_response = {}
+
+        response = web.Response(headers=raw_response.get("headers", {}))
+        response.body = raw_response.get("body", "")
+        response.content_type = response.headers.get("Content-Type")
 
         return response
 
@@ -38,9 +68,27 @@ async def start_site(
         site_group, Handler,
     ).items():
         handler = handler_class(conf)
-        for route in handler_class.routes:
+        for route, verb in itertools.product(
+            handler_class.routes,
+            [
+                "GET",
+                "HEAD",
+                "POST",
+                "PUT",
+                "DELETE",
+                "CONNECT",
+                "OPTIONS",
+                "TRACE",
+                "PATCH",
+            ],
+        ):
+            if not hasattr(handler, verb) or not callable(
+                getattr(handler, verb),
+            ):
+                continue
+            log.debug(f"Adding route '{route}' for {verb} to {site_group}")
             web_app.router.add_route(
-                "*", route, aiohttp_wrapper(handler),
+                verb, route, aiohttp_wrapper(handler),
             )
 
     web_app_runner = web.AppRunner(web_app)

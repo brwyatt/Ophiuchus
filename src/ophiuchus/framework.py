@@ -24,18 +24,6 @@ class Handler(object, metaclass=HandlerMeta):
     def __init__(self, config):
         self.config = config
 
-    def GET(self, *args, **kwargs):
-        pass
-
-    def POST(self, *args, **kwargs):
-        pass
-
-    def PUT(self, *args, **kwargs):
-        pass
-
-    def OPTIONS(self, *args, **kwargs):
-        pass
-
 
 def route(*routes: str) -> Handler:
     def dec(handler: Handler):
