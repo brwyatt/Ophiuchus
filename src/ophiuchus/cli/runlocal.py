@@ -7,6 +7,7 @@ from aiohttp import web
 from ophiuchus.cli.subcommands import Subcommand
 from ophiuchus.framework import GlobalConfig
 from ophiuchus.framework import Handler
+from ophiuchus.framework import routes
 from ophiuchus.utils import load_entry_points
 
 
@@ -14,11 +15,11 @@ log = logging.getLogger(__name__)
 app_runners = {}
 
 
-def aiohttp_wrapper(handler: Handler):
+def aiohttp_wrapper(site_group, handler: Handler):
     async def wrapper(request):
         log.info(
-            f"Received {request.method} request for {request.path} from "
-            f"{request._transport_peername[0]}:"
+            f"Received {request.method} request for {site_group}{request.path} "
+            f"from {request._transport_peername[0]}:"
             f"{request._transport_peername[1]}",
         )
         log.debug(f"Request details: {request.__dict__}")
@@ -78,7 +79,7 @@ async def start_site(
     ).items():
         handler = handler_class(conf)
         for route, verb in itertools.product(
-            handler_class.routes,
+            routes[f"{handler_class.__module__}.{handler_class.__name__}"],
             [
                 "GET",
                 "HEAD",
@@ -97,7 +98,7 @@ async def start_site(
                 continue
             log.debug(f"Adding route '{route}' for {verb} to {site_group}")
             web_app.router.add_route(
-                verb, route, aiohttp_wrapper(handler),
+                verb, route, aiohttp_wrapper(site_group, handler),
             )
 
     web_app_runner = web.AppRunner(web_app)

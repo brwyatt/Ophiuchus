@@ -1,4 +1,10 @@
+import logging
 from typing import Dict
+
+
+log = logging.getLogger(__name__)
+
+routes = {}
 
 
 class GlobalConfig:
@@ -25,17 +31,17 @@ class Handler(object, metaclass=HandlerMeta):
         self.config = config
 
 
-def route(*routes: str) -> Handler:
+def route(*handler_routes: str) -> Handler:
     def dec(handler: Handler):
-        if not hasattr(handler, "routes") or not isinstance(
-            handler.routes, list,
-        ):
-            handler.routes = []
+        name = f"{handler.__module__}.{handler.__name__}"
+        if name not in routes:
+            routes[name] = []
 
-        for route in routes:
-            if route in handler.routes:
+        for route in handler_routes:
+            if route in routes[name]:
+                log.warning(f"'{route}' already in route table for '{name}'!")
                 continue
-            handler.routes.append(route)
+            routes[name].append(route)
 
         return handler
 
