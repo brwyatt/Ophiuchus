@@ -23,6 +23,14 @@ def aiohttp_wrapper(handler: Handler):
         )
         log.debug(f"Request details: {request.__dict__}")
 
+        try:
+            # Get the formatter if present
+            # Nasty, but, it works. I'm open to alternatives...
+            event_resource = request.match_info.route.resource._formatter
+        except AttributeError:
+            # Fallback for simpler resources
+            event_resource = request.path
+
         event = {
             "httpMethod": request.method,
             "path": request.path,
@@ -39,8 +47,7 @@ def aiohttp_wrapper(handler: Handler):
                     "userAgent": request.headers.get("user-agent", "null"),
                 },
             },
-            # Nasty, but, it works. I'm open to alternatives...
-            "resource": request.match_info.route.resource._formatter,
+            "resource": event_resource,
             "body": str(await request.read(), "utf-8"),
         }
         context = None
