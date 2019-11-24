@@ -10,10 +10,15 @@ from ophiuchus.utils import load_entry_points
 
 
 log = logging.getLogger(__name__)
+app_runners = {}
 
 
 def aiohttp_wrapper(handler: Handler):
     def wrapper(request):
+        log.info(
+            f"Received {request.method} request for {request.path} from "
+            f"{request._transport_peername[0]}:{request._transport_peername[1]}",
+        )
         event = {}
         context = {}
 
@@ -22,6 +27,30 @@ def aiohttp_wrapper(handler: Handler):
         return response
 
     return wrapper
+
+
+async def start_site(
+    site_group, port, conf, endpoint_prefix="http://localhost"
+):
+    web_app = web.Application()
+
+    for handler_name, handler_class in load_entry_points(
+        site_group, Handler,
+    ).items():
+        handler = handler_class(conf)
+        for route in handler_class.routes:
+            web_app.router.add_route(
+                "*", route, aiohttp_wrapper(handler),
+            )
+
+    web_app_runner = web.AppRunner(web_app)
+    await web_app_runner.setup()
+    app_runners[site_group] = web_app_runner
+
+    web_app_server = web.TCPSite(web_app_runner, "localhost", port)
+    await web_app_server.start()
+
+    log.info(f"Running {site_group} on {endpoint_prefix}:{port}")
 
 
 class Run(Subcommand):
@@ -45,34 +74,13 @@ class Run(Subcommand):
         endpoint_prefix = "http://localhost"
         port = 3000
 
-        web_app_list = {}
-
         for site_group in site_groups:
-            web_app_list[site_group] = {}
-
-            web_app = web.Application()
-            web_app_list[site_group]["app"] = web_app
-
-            for handler_name, handler_class in load_entry_points(
-                site_group, Handler,
-            ).items():
-                handler = handler_class(conf)
-                for route in handler_class.routes:
-                    web_app.router.add_route(
-                        "*", route, aiohttp_wrapper(handler),
-                    )
-
-            web_app_handler = web_app.make_handler()
-            web_app_list[site_group]["handler"] = web_app_handler
-            web_app_couroutine = loop.create_server(
-                web_app_handler, "127.0.0.1", port,
+            loop.create_task(
+                start_site(
+                    site_group, port, conf, endpoint_prefix=endpoint_prefix,
+                ),
             )
-            web_app_server = loop.run_until_complete(web_app_couroutine)
-            web_app_list[site_group]["server"] = web_app_server
-            self.log.info(f"Running {site_group} on {endpoint_prefix}:{port}")
-
             conf.add_endpoint(site_group, f"{endpoint_prefix}:{port}")
-
             port += 1
 
         try:
@@ -80,14 +88,6 @@ class Run(Subcommand):
         except KeyboardInterrupt:
             self.log.error("Keyboard Interrupt!")
         finally:
-            for site_group, site in web_app_list.items():
-                self.log.info(f"Shutting down {site_group}")
-                site["server"].close()
-                loop.run_until_complete(site["app"].shutdown())
-                loop.run_until_complete(site["handler"].shutdown(60.0))
-                loop.run_until_complete(
-                    site["handler"].finish_connections(1.0),
-                )
-                loop.run_until_complete(site["app"].cleanup())
-
-        loop.close()
+            for app_runner_name, app_runner in app_runners.items():
+                self.log.info(f"Cleaning up {app_runner_name}")
+                loop.run_until_complete(app_runner.cleanup())
