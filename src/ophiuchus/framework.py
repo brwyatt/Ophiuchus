@@ -14,9 +14,13 @@ class GlobalConfig:
         return self.endpoint_map.get(site_group, None)
 
 
-class Handler:
-    routes = []
+class HandlerMeta(type):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.routes = []
 
+
+class Handler(object, metaclass=HandlerMeta):
     def __init__(self, config):
         self.config = config
 
@@ -35,7 +39,16 @@ class Handler:
 
 def route(*routes: str) -> Handler:
     def dec(handler: Handler):
-        handler.routes = routes
+        if not hasattr(handler, "routes") or not isinstance(
+            handler.routes, list,
+        ):
+            handler.routes = []
+
+        for route in routes:
+            if route in handler.routes:
+                continue
+            handler.routes.append(route)
+
         return handler
 
     return dec
