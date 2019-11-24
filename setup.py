@@ -19,7 +19,7 @@ setup(
     entry_points={
         "console_scripts": ["ophiuchus = ophiuchus.cli:main"],
         "ophiuchus_subcommands": [
-            "run = ophiuchus.cli.run:Run",
+            "runlocal = ophiuchus.cli.runlocal:Run",
             "build = ophiuchus.cli.build:Build",
         ],
     },
