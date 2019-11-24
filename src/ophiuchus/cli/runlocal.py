@@ -24,6 +24,7 @@ def aiohttp_wrapper(handler: Handler):
         log.debug(f"Request details: {request.__dict__}")
 
         event = {
+            "httpMethod": request.method,
             "path": request.path,
             "pathParameters": {
                 key: value for key, value in request.match_info.items()
@@ -38,7 +39,8 @@ def aiohttp_wrapper(handler: Handler):
                     "userAgent": request.headers.get("user-agent", "null"),
                 },
             },
-            "resource": request.path,  # close enough
+            # Nasty, but, it works. I'm open to alternatives...
+            "resource": request.match_info.route.resource._formatter,
             "body": str(await request.read(), "utf-8"),
         }
         context = None
