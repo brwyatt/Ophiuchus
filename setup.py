@@ -23,5 +23,6 @@ setup(
             "build = ophiuchus.cli.build:Build",
         ],
     },
-    install_requires=["boto3==1.10.26"],
+    install_requires=["boto3>=1.10.26,<1.11.0"],
+    tests_require=["aiohttp>=3.6.2,<3.7.0"],
 )
