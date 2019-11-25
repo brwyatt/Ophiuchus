@@ -122,13 +122,13 @@ class Run(Subcommand):
         super().__init__(parser)
 
         parser.add_argument(
-            "--listen_address",
+            "--listen-address",
             default="127.0.0.1",
             type=str,
             help="Address to start local servers on. (Default: '%(default)s')",
         )
         parser.add_argument(
-            "--first_listen_port",
+            "--first-listen-port",
             default=3000,
             type=int,
             help="Port to start first service on. (Default: %(default)i)",
