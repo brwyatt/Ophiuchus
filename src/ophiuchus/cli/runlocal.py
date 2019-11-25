@@ -2,6 +2,7 @@ import asyncio
 import itertools
 import logging
 from argparse import ArgumentParser
+from typing import List
 
 from aiohttp import web
 from ophiuchus.cli.subcommands import Subcommand
@@ -70,7 +71,10 @@ def aiohttp_wrapper(site_group, handler: Handler):
 
 
 async def start_site(
-    site_group, port, conf, endpoint_prefix="http://localhost"
+    site_group: str,
+    conf: GlobalConfig,
+    address: str = "127.0.0.1",
+    port: int = 3000,
 ):
     web_app = web.Application()
 
@@ -105,10 +109,10 @@ async def start_site(
     await web_app_runner.setup()
     app_runners[site_group] = web_app_runner
 
-    web_app_server = web.TCPSite(web_app_runner, "localhost", port)
+    web_app_server = web.TCPSite(web_app_runner, address, port)
     await web_app_server.start()
 
-    log.info(f"Running {site_group} on {endpoint_prefix}:{port}")
+    log.info(f"Running {site_group} on http://{address}:{port}")
 
 
 class Run(Subcommand):
@@ -118,6 +122,18 @@ class Run(Subcommand):
         super().__init__(parser)
 
         parser.add_argument(
+            "--listen_address",
+            default="127.0.0.1",
+            type=str,
+            help="Address to start local servers on. (Default: '%(default)s')",
+        )
+        parser.add_argument(
+            "--first_listen_port",
+            default=3000,
+            type=int,
+            help="Port to start first service on. (Default: %(default)i)",
+        )
+        parser.add_argument(
             "site_groups",
             nargs="+",
             metavar="site_group",
@@ -125,20 +141,24 @@ class Run(Subcommand):
             help="Entry point group name(s) for website Lambda handlers",
         )
 
-    def __call__(self, site_groups, *args, **kwargs) -> int:
+    def __call__(
+        self,
+        site_groups: List[str],
+        listen_address: str,
+        first_listen_port: List[int],
+        *args,
+        **kwargs,
+    ) -> int:
         conf = GlobalConfig()
         loop = asyncio.get_event_loop()
 
-        endpoint_prefix = "http://localhost"
-        port = 3000
+        port = first_listen_port
 
         for site_group in site_groups:
             loop.create_task(
-                start_site(
-                    site_group, port, conf, endpoint_prefix=endpoint_prefix,
-                ),
+                start_site(site_group, conf, listen_address, port),
             )
-            conf.add_endpoint(site_group, f"{endpoint_prefix}:{port}")
+            conf.add_endpoint(site_group, f"http://{listen_address}:{port}")
             port += 1
 
         try:
