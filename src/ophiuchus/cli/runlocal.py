@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 import logging
+import re
 from argparse import ArgumentParser
 from typing import List
 
@@ -75,6 +76,7 @@ async def start_site(
     conf: GlobalConfig,
     address: str = "127.0.0.1",
     port: int = 3000,
+    allow_unsupported_routes: bool = False,
 ):
     web_app = web.Application()
 
@@ -100,7 +102,34 @@ async def start_site(
                 getattr(handler, verb),
             ):
                 continue
+
             log.debug(f"Adding route '{route}' for {verb} to {site_group}")
+
+            # Check for unsupported route variables
+            if re.search(r"\{[^}]*:[^}]*\}", route):
+                msg = (
+                    f"Unsupported route variable detected in '{route}'. While "
+                    "aiohttp supports regex matches, API Gateway does not. "
+                    "Only `{variable+}` is supported: "
+                    "https://docs.aws.amazon.com/"
+                    "apigateway/latest/developerguide/"
+                    "api-gateway-method-settings-method-request.html"
+                )
+                if not allow_unsupported_routes:
+                    log.critical(msg)
+                    log.critical(
+                        "If you know what you are doing, unsupported route "
+                        "varables can be enabled with the "
+                        "`--allow-unsupported-routes` flag, but is not "
+                        "recommended.",
+                    )
+                    raise ValueError("Unsupported route path variable.")
+                else:
+                    log.warning(msg)
+
+            # Convert API Gateway `{proxy+}` into aiohttp `{proxy:.*}`
+            route = re.sub(r"(\{[^}]*)\+(\})", r"\1:.*\2", route)
+
             web_app.router.add_route(
                 verb, route, aiohttp_wrapper(site_group, handler),
             )
@@ -134,6 +163,14 @@ class Run(Subcommand):
             help="Port to start first service on. (Default: %(default)i)",
         )
         parser.add_argument(
+            "--allow-unsupported-routes",
+            default=False,
+            action="store_true",
+            help="Allow routes that are only supported in aiohttp, but not in "
+            "API Gateway. Potentially unsafe and not recommended. Only use "
+            "this if you really know what you're doing",
+        )
+        parser.add_argument(
             "site_groups",
             nargs="+",
             metavar="site_group",
@@ -146,6 +183,7 @@ class Run(Subcommand):
         site_groups: List[str],
         listen_address: str,
         first_listen_port: List[int],
+        allow_unsupported_routes: bool,
         *args,
         **kwargs,
     ) -> int:
@@ -156,7 +194,13 @@ class Run(Subcommand):
 
         for site_group in site_groups:
             loop.create_task(
-                start_site(site_group, conf, listen_address, port),
+                start_site(
+                    site_group,
+                    conf,
+                    address=listen_address,
+                    port=port,
+                    allow_unsupported_routes=allow_unsupported_routes,
+                ),
             )
             conf.add_endpoint(site_group, f"http://{listen_address}:{port}")
             port += 1
