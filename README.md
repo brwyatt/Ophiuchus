@@ -3,6 +3,11 @@ Library to create, build, and deploy serverless website stacks on AWS
 
 **NOTE: This project is currently under heavy development and should be considered experimental**
 
+## Related Repos
+
+* [Ophiuchus-Demo](https://github.com/brwyatt/Ophiuchus-Demo): Demo site built with Ophiuchus
+* [Ophiuchus-Template](https://github.com/brwyatt/Ophiuchus-Template): Template repo to setup an Ophiuchus-based site
+
 ## Development
 
 ### Setup
