@@ -20,13 +20,7 @@ class GlobalConfig:
         return self.endpoint_map.get(site_group, None)
 
 
-class HandlerMeta(type):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.routes = []
-
-
-class Handler(object, metaclass=HandlerMeta):
+class Handler(object):
     def __init__(self, config):
         self.config = config
 
