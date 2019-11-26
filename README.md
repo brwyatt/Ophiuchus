@@ -15,8 +15,6 @@ Library to create, build, and deploy serverless website stacks on AWS
    `pip3 install -r requirements-dev.txt`
 4. Install pre-commit hooks:
    `pre-commit install`
-5. Install package for development:
-   `pip3 install -e .`
 
 ### Development
 
