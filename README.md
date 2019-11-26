@@ -1,6 +1,8 @@
 # Ophiuchus
 Library to create, build, and deploy serverless website stacks on AWS
 
+**NOTE: This project is currently under heavy development and should be considered experimental**
+
 ## Development
 
 ### Setup
