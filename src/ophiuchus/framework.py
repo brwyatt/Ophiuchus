@@ -1,3 +1,4 @@
+import copy
 import logging
 from typing import Dict
 
@@ -8,8 +9,8 @@ routes = {}
 
 
 class GlobalConfig:
-    def __init__(self):
-        self.endpoint_map = {}
+    def __init__(self, endpoints: Dict[str, str] = {}):
+        self.endpoint_map = copy.deepcopy(endpoints)
 
     def add_endpoint(self, site_group: str, endpoint: str):
         if site_group in self.endpoint_map:
