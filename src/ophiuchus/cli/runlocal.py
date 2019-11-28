@@ -177,6 +177,7 @@ class Run(EntryPointBuilderSubcommand):
         listen_address: str,
         first_listen_port: List[int],
         allow_unsupported_routes: bool,
+        additional_endpoints: List[List[str]] = [],
         *args,
         **kwargs,
     ) -> int:
@@ -184,6 +185,14 @@ class Run(EntryPointBuilderSubcommand):
         loop = asyncio.get_event_loop()
 
         port = first_listen_port
+
+        # Add additional endpoints to config first.
+        # This way, any included locally will over-ride them.
+        for site_group, endpoint in additional_endpoints:
+            self.log.debug(
+                f"Adding additional named endpoint {site_group} at {endpoint}",
+            )
+            conf.add_endpoint(site_group, endpoint)
 
         for site_group in site_groups:
             loop.create_task(

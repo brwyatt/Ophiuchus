@@ -31,6 +31,16 @@ class EntryPointBuilderSubcommand(Subcommand):
         super().__init__(parser)
 
         parser.add_argument(
+            "--additional-endpoints",
+            action="append",
+            default=[],
+            nargs=2,
+            metavar=("SITE_GROUP", "ENDPOINT"),
+            type=str,
+            help="Add additional named endpoints that aren't part of the local"
+            " build/run but are required by the application.",
+        )
+        parser.add_argument(
             "site_groups",
             nargs="+",
             metavar="site_group",
