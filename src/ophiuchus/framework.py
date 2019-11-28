@@ -12,13 +12,16 @@ class GlobalConfig:
     def __init__(self, endpoints: Dict[str, str] = {}):
         self.endpoint_map = copy.deepcopy(endpoints)
 
-    def add_endpoint(self, site_group: str, endpoint: str):
+    def add_endpoint(self, site_group: str, endpoint: str) -> None:
         if site_group in self.endpoint_map:
             raise ValueError(f"{site_group} already has an endpoint")
         self.endpoint_map[site_group] = endpoint
 
-    def get_endpoint(self, site_group: str):
+    def get_endpoint(self, site_group: str) -> str:
         return self.endpoint_map.get(site_group, None)
+
+    def get_endpoints(self) -> Dict[str, str]:
+        return copy.deepcopy(self.endpoint_map)
 
 
 class Handler(object):
