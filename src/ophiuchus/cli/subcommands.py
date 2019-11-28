@@ -22,3 +22,18 @@ class Subcommand:
         msg = "This subcommand has not been implemented"
         self.log.critical(msg)
         raise NotImplementedError(msg)
+
+
+class EntryPointBuilderSubcommand(Subcommand):
+    # Subcommand baseclass providing some default common arguments
+
+    def __init__(self, parser: ArgumentParser):
+        super().__init__(parser)
+
+        parser.add_argument(
+            "site_groups",
+            nargs="+",
+            metavar="site_group",
+            type=str,
+            help="Entry point group name(s) for website Lambda handlers",
+        )

@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from typing import List
 
 from aiohttp import web
-from ophiuchus.cli.subcommands import Subcommand
+from ophiuchus.cli.subcommands import EntryPointBuilderSubcommand
 from ophiuchus.framework import GlobalConfig
 from ophiuchus.framework import Handler
 from ophiuchus.framework import routes
@@ -144,7 +144,7 @@ async def start_site(
     log.info(f"Running {site_group} on http://{address}:{port}")
 
 
-class Run(Subcommand):
+class Run(EntryPointBuilderSubcommand):
     description = "Run website locally"
 
     def __init__(self, parser: ArgumentParser):
@@ -169,13 +169,6 @@ class Run(Subcommand):
             help="Allow routes that are only supported in aiohttp, but not in "
             "API Gateway. Potentially unsafe and not recommended. Only use "
             "this if you really know what you're doing",
-        )
-        parser.add_argument(
-            "site_groups",
-            nargs="+",
-            metavar="site_group",
-            type=str,
-            help="Entry point group name(s) for website Lambda handlers",
         )
 
     def __call__(

@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
 
-from ophiuchus.cli.subcommands import Subcommand
+from ophiuchus.cli.subcommands import EntryPointBuilderSubcommand
 
 
-class Build(Subcommand):
+class Build(EntryPointBuilderSubcommand):
     description = "Build website"
 
     def __init__(self, parser: ArgumentParser):
