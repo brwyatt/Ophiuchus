@@ -55,7 +55,9 @@ class Build(EntryPointBuilderSubcommand):
         *args,
         **kwargs,
     ):
-        conf = GlobalConfig(endpoints=dict(additional_endpoints))  # noqa: F841
+        config = GlobalConfig(  # noqa: F841
+            endpoints=dict(additional_endpoints),
+        )
 
         self.log.info(f"Cleaning old artifacts dir: {artifacts_base_dir}")
         rmtree(artifacts_base_dir)

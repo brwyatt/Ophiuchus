@@ -73,7 +73,7 @@ def aiohttp_wrapper(site_group, handler: Handler):
 
 async def start_site(
     site_group: str,
-    conf: GlobalConfig,
+    config: GlobalConfig,
     address: str = "127.0.0.1",
     port: int = 3000,
     allow_unsupported_routes: bool = False,
@@ -83,7 +83,7 @@ async def start_site(
     for handler_name, handler_class in load_entry_points(
         site_group, Handler,
     ).items():
-        handler = handler_class(conf)
+        handler = handler_class(config)
         for route, verb in itertools.product(
             routes[f"{handler_class.__module__}.{handler_class.__name__}"],
             [
@@ -181,7 +181,7 @@ class Run(EntryPointBuilderSubcommand):
         *args,
         **kwargs,
     ) -> int:
-        conf = GlobalConfig(endpoints=dict(additional_endpoints))
+        config = GlobalConfig(endpoints=dict(additional_endpoints))
         loop = asyncio.get_event_loop()
 
         port = first_listen_port
@@ -190,13 +190,13 @@ class Run(EntryPointBuilderSubcommand):
             loop.create_task(
                 start_site(
                     site_group,
-                    conf,
+                    config,
                     address=listen_address,
                     port=port,
                     allow_unsupported_routes=allow_unsupported_routes,
                 ),
             )
-            conf.add_endpoint(site_group, f"http://{listen_address}:{port}")
+            config.add_endpoint(site_group, f"http://{listen_address}:{port}")
             port += 1
 
         try:
