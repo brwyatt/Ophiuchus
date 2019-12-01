@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 from typing import Dict
 
@@ -9,8 +10,18 @@ routes = {}
 
 
 class GlobalConfig:
-    def __init__(self, endpoints: Dict[str, str] = {}):
-        self.endpoint_map = copy.deepcopy(endpoints)
+    def __init__(self, endpoints: Dict[str, str] = {}, **kwargs):
+        self.log = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
+
+        self.log.debug(f"Adding additional endpoints: {endpoints}")
+        self.endpoints = copy.deepcopy(endpoints)
+
+        self.config = {}
+        for kwarg, value in kwargs.items():
+            self.log.debug(f"Adding arbitrary config: {kwarg}")
+            self.config[kwarg] = value
 
     def add_endpoint(self, site_group: str, endpoint: str) -> None:
         if site_group in self.endpoint_map:
@@ -22,6 +33,19 @@ class GlobalConfig:
 
     def get_endpoints(self) -> Dict[str, str]:
         return copy.deepcopy(self.endpoint_map)
+
+    @classmethod
+    def from_file(cls, file_path):
+        log.info("Loading config")
+        try:
+            with open(file_path) as f:
+                config_from_file = json.load(f)
+        except Exception as e:
+            log.warn(f"Failed to load config file: {e}")
+            log.warn("Continuing with empty config")
+            config_from_file = {}
+
+        return GlobalConfig(**config_from_file)
 
 
 class Handler(object):
