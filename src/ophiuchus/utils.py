@@ -9,13 +9,15 @@ log = logging.getLogger(__name__)
 
 
 def load_entry_points(
-    group: str, type_constraint: Optional[type] = None,
+    group: str,
+    type_constraint: Optional[type] = None,
+    working_set: pkg_resources.WorkingSet = pkg_resources.working_set,
 ) -> Dict[str, callable]:
     entry_points = {}
 
     log.info(f'Loading entry points for "{group}"')
 
-    for entry_point in pkg_resources.iter_entry_points(group):
+    for entry_point in working_set.iter_entry_points(group):
         log.debug(f'Loading entry point "{entry_point.name}" from "{group}"')
 
         try:
