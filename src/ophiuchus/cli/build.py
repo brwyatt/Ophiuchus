@@ -6,6 +6,8 @@ from os.path import abspath
 from shutil import rmtree
 from typing import List
 
+import jinja2
+import pkg_resources
 from ophiuchus.cli.subcommands import EntryPointBuilderSubcommand
 from ophiuchus.framework import GlobalConfig
 from ophiuchus.framework import Handler
@@ -105,6 +107,12 @@ class Build(EntryPointBuilderSubcommand):
             requirements_file=requirements_file,
         )
 
+        self.build_lambdas(
+            site_group=site_group,
+            site_group_lambda_dir=site_group_lambda_dir,
+            site_group_packages_dir=site_group_packages_dir,
+        )
+
     def install_package(
         self,
         site_group_packages_dir: str,
@@ -128,3 +136,29 @@ class Build(EntryPointBuilderSubcommand):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
+
+    def build_lambdas(
+        self,
+        site_group: str,
+        site_group_lambda_dir: str,
+        site_group_packages_dir: str,
+    ):
+        self.log.debug("Creating site group lambda directory")
+        os.makedirs(site_group_lambda_dir, exist_ok=True)
+
+        working_set = pkg_resources.WorkingSet(
+            entries=[site_group_packages_dir],
+        )
+
+        env = jinja2.Environment(
+            loader=jinja2.PackageLoader("ophiuchus", "templates"),
+        )
+        template = env.get_template("lambdas/handler.py.template")
+        for name, ep in load_entry_points(
+            site_group, Handler, working_set,
+        ).items():
+            file_name = os.path.join(site_group_lambda_dir, f"{name}.py")
+            with open(file_name, "w") as f:
+                f.write(
+                    template.render(module=ep.__module__, name=ep.__name__),
+                )

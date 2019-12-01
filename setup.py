@@ -13,7 +13,7 @@ setup(
     url="https://github.com/brwyatt/Ophiuchus",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    package_data={},
+    package_data={"ophiuchus": ["templates/lambdas/*"]},
     python_requires="~=3.6",
     include_package_data=False,
     entry_points={
@@ -23,6 +23,6 @@ setup(
             "build = ophiuchus.cli.build:Build",
         ],
     },
-    install_requires=["boto3>=1.10.0,<1.11.0"],
+    install_requires=["boto3>=1.10.0,<1.11.0", "Jinja2>=2.10.0,<2.11.0"],
     tests_require=["aiohttp>=3.6.0,<3.7.0"],
 )
